@@ -36,7 +36,7 @@ include $(FILELIST_MK)
 # Filter out directories and files in blacklist to obtain the final set of source files
 DIRS-BLACKLIST-y += $(DIRS-BLACKLIST)
 SRCS-BLACKLIST-y += $(SRCS-BLACKLIST) $(shell find $(DIRS-BLACKLIST-y) -name "*.c")
-SRCS-y += $(shell find $(DIRS-y) -name "*.c")
+SRCS-y += $(shell find $(DIRS-y) -name "*.c")    # 参与编译的源文件的候选集合
 SRCS = $(filter-out $(SRCS-BLACKLIST-y),$(SRCS-y))
 
 # Extract compiler and options from menuconfig
