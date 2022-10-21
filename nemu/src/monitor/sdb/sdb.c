@@ -14,6 +14,7 @@
 ***************************************************************************************/
 
 #include <isa.h>
+#include <utils.h>
 #include <cpu/cpu.h>
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -23,7 +24,6 @@ static int is_batch_mode = false;
 
 void init_regex();
 void init_wp_pool();
-
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 static char* rl_gets() {
   static char *line_read = NULL;
@@ -47,8 +47,32 @@ static int cmd_c(char *args) {
   return 0;
 }
 
+static int cmd_si (char *args) {
+  // char *arg = strtok(args, " ");
+  // printf("arg = %s",arg);
+      char *arg = strtok(NULL, " ");
+      printf("arg = %s\n", arg);
+      if(arg == NULL)
+        cpu_exec(1);
+      else {
+        int temp = *arg - '0';
+        cpu_exec(temp);
+      }
+  // if(arg == NULL)
+  //   cpu_exec(1);
+  // else 
+  //   {
+  //     arg = strtok(NULL, " ");
+  //     printf("arg = %s",arg);
+  //     int temp = *arg - '0';
+  //     //cpu_exec(temp);
+  //     printf("temp = %d",temp);
+  //   }
+    return 0;
+}
 
 static int cmd_q(char *args) {
+   nemu_state.state = NEMU_QUIT;
   return -1;
 }
 
@@ -62,16 +86,12 @@ static struct {
   { "help", "Display information about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
-
+  {"si", "单步执行", cmd_si}
   /* TODO: Add more commands */
 
 };
 
 #define NR_CMD ARRLEN(cmd_table)
-
-static int cmd_si (char *args) {
-  char *arg = strtok();
-}
 
 static int cmd_help(char *args) {
   /* extract the first argument */
