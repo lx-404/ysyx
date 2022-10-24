@@ -23,7 +23,9 @@
 static int is_batch_mode = false;
 
 void init_regex();
+void isa_reg_display();
 void init_wp_pool();
+void isa_reg_mon(char *reg);
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 static char* rl_gets() {
   static char *line_read = NULL;
@@ -47,27 +49,44 @@ static int cmd_c(char *args) {
   return 0;
 }
 
+static int cmd_info(char *args) {
+  char *arg = strtok(NULL, " ");
+  if(*arg == 'r')
+    isa_reg_display();
+  else if(*arg == 'w')
+    {  
+      arg = strtok(NULL, " ");
+      printf("%s\n",arg);
+      isa_reg_mon(arg);
+    }
+  else
+    printf("error \n");
+  return 0;
+}
+
+static int cmd_scan(char *args) {
+    char *arg = strtok(NULL," ");
+    int n = *arg - '0';
+    printf("n = %d\n",n);
+    arg = strtok(NULL, " ");
+    printf("%s\n",arg);
+    printf("addr = %p\n",&arg);
+    for(int i = 0; i <= n; i ++)
+    {
+      break;
+    }
+    return 0;
+}
+
 static int cmd_si (char *args) {
-  // char *arg = strtok(args, " ");
-  // printf("arg = %s",arg);
       char *arg = strtok(NULL, " ");
-      printf("arg = %s\n", arg);
+      // printf("arg = %s\n", arg);
       if(arg == NULL)
         cpu_exec(1);
       else {
         int temp = *arg - '0';
         cpu_exec(temp);
       }
-  // if(arg == NULL)
-  //   cpu_exec(1);
-  // else 
-  //   {
-  //     arg = strtok(NULL, " ");
-  //     printf("arg = %s",arg);
-  //     int temp = *arg - '0';
-  //     //cpu_exec(temp);
-  //     printf("temp = %d",temp);
-  //   }
     return 0;
 }
 
@@ -86,7 +105,10 @@ static struct {
   { "help", "Display information about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
-  {"si", "单步执行", cmd_si}
+  {"si", "单步执行", cmd_si},
+  {"info", "查看寄存器状态",cmd_info},
+  {"scan", "扫描内存",cmd_scan}
+
   /* TODO: Add more commands */
 
 };
