@@ -23,6 +23,8 @@
 static int is_batch_mode = false;
 
 void init_regex();
+word_t expr(char *e, bool *success);
+word_t vaddr_read(vaddr_t addr, int len);
 void isa_reg_display();
 void init_wp_pool();
 void isa_reg_mon(char *reg);
@@ -36,11 +38,16 @@ static char* rl_gets() {
   }
 
   line_read = readline("(nemu) ");
-
-  if (line_read && *line_read) {
+  /*
+  printf("line_read = %s ,*line_read = %d\n", line_read, *line_read);
+  line_read 是输出该空间存放的值（某个值的地址），*line_read是输出该空间存放的地址所在的值
+  */
+  if (line_read && *line_read) {  //类似于缓存上次输入的命令，
     add_history(line_read);
-  }
+   // printf("line_read_old = %s\n", line_read);
 
+  }
+  //printf("line_read_new = %s\n",line_read);
   return line_read;
 }
 
@@ -56,7 +63,7 @@ static int cmd_info(char *args) {
   else if(*arg == 'w')
     {  
       arg = strtok(NULL, " ");
-      printf("%s\n",arg);
+      //printf("%s\n",arg);
       isa_reg_mon(arg);
     }
   else
@@ -64,16 +71,57 @@ static int cmd_info(char *args) {
   return 0;
 }
 
+static int cmd_p(char * args) {
+  char *arg = strtok(NULL, "\n");
+    word_t res;
+  /*其实定义的char *arg是两个含义，一个是定义了char类型的arg变量，还有一个是定义了该变量的指针*arg
+  strtok返回的是char类型的字串，如果没有匹配就返回NULL，*arg是char类型的arg存放的地方*/
+  while(arg != NULL)
+{ 
+  bool success = false;
+  res = expr(arg, &success);
+  arg = strtok(NULL, " ");
+}
+printf("res = %ld\n", res);
+  return 0;
+}
+
+static int cmd_test(char * args) {
+  printf("this is a test fun!\n");
+  int a = 2;
+  int *p = &a;
+  printf("a = %d\n", a);    //a = 2
+  printf("&a = %p\n", &a);  //&a = 0x7ffdd273eb2c
+  printf("*p = %d\n", *p);  //*p = 2
+  printf("p = %p\n", p);    //p = 0x7ffdc42630cc
+
+  printf("&p = %p\n", &p);  //&p = 0x7ffeb61be330
+
+
+  char *arg = strtok(NULL, " ");
+  while(arg != NULL)
+  {
+    printf("arg == %s\n", arg);
+    printf("*arg == %d\n", *arg);
+    printf("&arg == %p\n", arg);
+    arg = strtok(NULL," ");
+  }
+  return 0;
+}
+
 static int cmd_scan(char *args) {
-    char *arg = strtok(NULL," ");
-    int n = *arg - '0';
-    printf("n = %d\n",n);
-    arg = strtok(NULL, " ");
-    printf("%s\n",arg);
-    printf("addr = %p\n",&arg);
-    for(int i = 0; i <= n; i ++)
+    char *arg1 = strtok(NULL," ");
+    char *arg2 = strtok(NULL," ");
+    vaddr_t addr;
+    int n;
+    sscanf(arg1, "%d", &n);
+    sscanf(arg2, "%lx", &addr);
+    printf("n = %d\n", n);
+    printf("addr = %lx\n",addr);
+    for(int i = 0; i < n; i ++)
     {
-      break;
+      printf(" x = 0x%08lx\n",vaddr_read(addr,4));
+      addr += 4;
     }
     return 0;
 }
@@ -107,8 +155,9 @@ static struct {
   { "q", "Exit NEMU", cmd_q },
   {"si", "单步执行", cmd_si},
   {"info", "查看寄存器状态",cmd_info},
-  {"scan", "扫描内存",cmd_scan}
-
+  {"scan", "扫描内存",cmd_scan},
+  {"p","正则表达式求解",cmd_p},
+  {"test","用于自己测试",cmd_test}
   /* TODO: Add more commands */
 
 };
@@ -147,14 +196,12 @@ void sdb_mainloop() {
     cmd_c(NULL);
     return;
   }
-
   for (char *str; (str = rl_gets()) != NULL; ) {
     char *str_end = str + strlen(str);
-
     /* extract the first token as the command */
-    char *cmd = strtok(str, " ");
+    char *cmd = strtok(str, " ");  //打印命令
+    //printf("cmd = %s\n",cmd);
     if (cmd == NULL) { continue; }
-
     /* treat the remaining string as the arguments,
      * which may need further parsing
      */
@@ -170,7 +217,9 @@ void sdb_mainloop() {
 
     int i;
     for (i = 0; i < NR_CMD; i ++) {
+      
       if (strcmp(cmd, cmd_table[i].name) == 0) {
+        /*这里handler是用于匹配成功，他会返回0*/
         if (cmd_table[i].handler(args) < 0) { return; }
         break;
       }
